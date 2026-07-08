@@ -1,0 +1,261 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "gpuType": "T4",
+      "authorship_tag": "ABX9TyPKRv+eXYTWbkjiouFUVPUX",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    },
+    "accelerator": "GPU"
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/ekrasafdar/AIMentor/blob/main/brain_tumor_classification.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Kkjk-sEORH7G",
+        "outputId": "7e4645f1-0845-4310-d72a-3b7e297168e8"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Mounted at /content/drive\n",
+            "✅ Extracted!\n",
+            "brain_tumor_data/ \n",
+            "  Testing/ \n",
+            "    notumor/ (400 files)\n",
+            "    pituitary/ (400 files)\n",
+            "    meningioma/ (400 files)\n",
+            "    glioma/ (400 files)\n",
+            "  Training/ \n",
+            "    notumor/ (1400 files)\n",
+            "    pituitary/ (1400 files)\n",
+            "    meningioma/ (1400 files)\n",
+            "    glioma/ (1400 files)\n"
+          ]
+        }
+      ],
+      "source": [
+        "from google.colab import drive\n",
+        "drive.mount('/content/drive')\n",
+        "\n",
+        "import zipfile, os\n",
+        "zip_path = '/content/drive/MyDrive/brain_tumor_research/archive.zip'\n",
+        "extract_path = '/content/brain_tumor_data'\n",
+        "\n",
+        "with zipfile.ZipFile(zip_path, 'r') as zip_ref:\n",
+        "    zip_ref.extractall(extract_path)\n",
+        "\n",
+        "print(\"✅ Extracted!\")\n",
+        "for root, dirs, files in os.walk(extract_path):\n",
+        "    level = root.replace(extract_path, '').count(os.sep)\n",
+        "    if level <= 2:\n",
+        "        print('  '*level + os.path.basename(root) + '/', f'({len(files)} files)' if files else '')"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import tensorflow as tf\n",
+        "from tensorflow.keras.applications import ResNet50, EfficientNetB0, MobileNetV2\n",
+        "from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout\n",
+        "from tensorflow.keras.models import Model\n",
+        "from tensorflow.keras.preprocessing.image import ImageDataGenerator\n",
+        "from sklearn.metrics import precision_recall_fscore_support, confusion_matrix\n",
+        "import numpy as np\n",
+        "import matplotlib.pyplot as plt\n",
+        "import seaborn as sns\n",
+        "print(\"✅ Ready\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "lZKGx8xGRmHW",
+        "outputId": "3f31d903-24a9-47eb-b075-eab747636c32"
+      },
+      "execution_count": 2,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "✅ Ready\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "train_path = '/content/brain_tumor_data/Training'\n",
+        "test_path = '/content/brain_tumor_data/Testing'\n",
+        "IMG_SIZE = (224, 224)\n",
+        "BATCH_SIZE = 32\n",
+        "\n",
+        "train_datagen = ImageDataGenerator(\n",
+        "    rescale=1./255, rotation_range=15, width_shift_range=0.1,\n",
+        "    height_shift_range=0.1, horizontal_flip=True, validation_split=0.2\n",
+        ")\n",
+        "test_datagen = ImageDataGenerator(rescale=1./255)\n",
+        "\n",
+        "train_generator = train_datagen.flow_from_directory(\n",
+        "    train_path, target_size=IMG_SIZE, batch_size=BATCH_SIZE,\n",
+        "    class_mode='categorical', subset='training'\n",
+        ")\n",
+        "val_generator = train_datagen.flow_from_directory(\n",
+        "    train_path, target_size=IMG_SIZE, batch_size=BATCH_SIZE,\n",
+        "    class_mode='categorical', subset='validation'\n",
+        ")\n",
+        "test_generator = test_datagen.flow_from_directory(\n",
+        "    test_path, target_size=IMG_SIZE, batch_size=BATCH_SIZE,\n",
+        "    class_mode='categorical', shuffle=False\n",
+        ")\n",
+        "print(f\"✅ Train: {train_generator.samples}, Val: {val_generator.samples}, Test: {test_generator.samples}\")\n",
+        "print(f\"Classes: {train_generator.class_indices}\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "NGXqVmr0R-mZ",
+        "outputId": "9a19ba8b-ed30-40f6-abca-7c5ead81dd4e"
+      },
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Found 4480 images belonging to 4 classes.\n",
+            "Found 1120 images belonging to 4 classes.\n",
+            "Found 1600 images belonging to 4 classes.\n",
+            "✅ Train: 4480, Val: 1120, Test: 1600\n",
+            "Classes: {'glioma': 0, 'meningioma': 1, 'notumor': 2, 'pituitary': 3}\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def build_model(base_model_class, num_classes):\n",
+        "    base = base_model_class(weights='imagenet', include_top=False, input_shape=(224,224,3))\n",
+        "    base.trainable = False\n",
+        "    x = GlobalAveragePooling2D()(base.output)\n",
+        "    x = Dropout(0.3)(x)\n",
+        "    x = Dense(128, activation='relu')(x)\n",
+        "    out = Dense(num_classes, activation='softmax')(x)\n",
+        "    model = Model(base.input, out)\n",
+        "    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])\n",
+        "    return model\n",
+        "\n",
+        "results = {}\n",
+        "trained_models = {}\n",
+        "\n",
+        "for name, base_cls in [('ResNet50', ResNet50), ('EfficientNetB0', EfficientNetB0), ('MobileNetV2', MobileNetV2)]:\n",
+        "    print(f\"\\n🟢 Training {name}...\")\n",
+        "    model = build_model(base_cls, 4)\n",
+        "    model.fit(train_generator, validation_data=val_generator, epochs=10, verbose=1)\n",
+        "\n",
+        "    test_generator.reset()\n",
+        "    pred_probs = model.predict(test_generator, verbose=0)\n",
+        "    pred = np.argmax(pred_probs, axis=1)\n",
+        "    true = test_generator.classes\n",
+        "\n",
+        "    p, r, f, _ = precision_recall_fscore_support(true, pred, average='weighted')\n",
+        "    acc = np.mean(pred == true)\n",
+        "    results[name] = {'accuracy': acc, 'precision': p, 'recall': r, 'f1': f}\n",
+        "    trained_models[name] = model\n",
+        "    print(f\"✅ {name} — Acc: {acc:.4f}, F1: {f:.4f}\")\n",
+        "\n",
+        "import pandas as pd\n",
+        "print(\"\\n🏆 FINAL RESULTS:\")\n",
+        "print(pd.DataFrame(results).T)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Fx4_milvT4Nk",
+        "outputId": "05a9413b-2346-45d9-8a76-c083c0b1b371"
+      },
+      "execution_count": null,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "🟢 Training ResNet50...\n",
+            "Downloading data from https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5\n",
+            "\u001b[1m94765736/94765736\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m6s\u001b[0m 0us/step\n",
+            "Epoch 1/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m103s\u001b[0m 615ms/step - accuracy: 0.4114 - loss: 1.2336 - val_accuracy: 0.4705 - val_loss: 1.1120\n",
+            "Epoch 2/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m80s\u001b[0m 568ms/step - accuracy: 0.4955 - loss: 1.1055 - val_accuracy: 0.4938 - val_loss: 1.0377\n",
+            "Epoch 3/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m78s\u001b[0m 560ms/step - accuracy: 0.5482 - loss: 1.0367 - val_accuracy: 0.6018 - val_loss: 0.9676\n",
+            "Epoch 4/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m81s\u001b[0m 573ms/step - accuracy: 0.5670 - loss: 1.0099 - val_accuracy: 0.5625 - val_loss: 0.9958\n",
+            "Epoch 5/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m78s\u001b[0m 557ms/step - accuracy: 0.5676 - loss: 0.9958 - val_accuracy: 0.5750 - val_loss: 0.9610\n",
+            "Epoch 6/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m80s\u001b[0m 573ms/step - accuracy: 0.5967 - loss: 0.9561 - val_accuracy: 0.5571 - val_loss: 0.9520\n",
+            "Epoch 7/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m78s\u001b[0m 554ms/step - accuracy: 0.5998 - loss: 0.9432 - val_accuracy: 0.5750 - val_loss: 1.0050\n",
+            "Epoch 8/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m80s\u001b[0m 570ms/step - accuracy: 0.6147 - loss: 0.9217 - val_accuracy: 0.5929 - val_loss: 0.9030\n",
+            "Epoch 9/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m78s\u001b[0m 553ms/step - accuracy: 0.6029 - loss: 0.9325 - val_accuracy: 0.6455 - val_loss: 0.8621\n",
+            "Epoch 10/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m78s\u001b[0m 556ms/step - accuracy: 0.6092 - loss: 0.9231 - val_accuracy: 0.5902 - val_loss: 0.8898\n",
+            "✅ ResNet50 — Acc: 0.6269, F1: 0.6258\n",
+            "\n",
+            "🟢 Training EfficientNetB0...\n",
+            "Downloading data from https://storage.googleapis.com/keras-applications/efficientnetb0_notop.h5\n",
+            "\u001b[1m16705208/16705208\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m2s\u001b[0m 0us/step\n",
+            "Epoch 1/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m115s\u001b[0m 596ms/step - accuracy: 0.2386 - loss: 1.4086 - val_accuracy: 0.2500 - val_loss: 1.3980\n",
+            "Epoch 2/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m81s\u001b[0m 578ms/step - accuracy: 0.2565 - loss: 1.3906 - val_accuracy: 0.2500 - val_loss: 1.3878\n",
+            "Epoch 3/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m75s\u001b[0m 539ms/step - accuracy: 0.2520 - loss: 1.3881 - val_accuracy: 0.2500 - val_loss: 1.3868\n",
+            "Epoch 4/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m75s\u001b[0m 536ms/step - accuracy: 0.2525 - loss: 1.3868 - val_accuracy: 0.2500 - val_loss: 1.3860\n",
+            "Epoch 5/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m82s\u001b[0m 538ms/step - accuracy: 0.2547 - loss: 1.3873 - val_accuracy: 0.2500 - val_loss: 1.3864\n",
+            "Epoch 6/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m75s\u001b[0m 534ms/step - accuracy: 0.2596 - loss: 1.3863 - val_accuracy: 0.2536 - val_loss: 1.3856\n",
+            "Epoch 7/10\n",
+            "\u001b[1m140/140\u001b[0m \u001b[32m━━━━━━━━━━━━━━━━━━━━\u001b[0m\u001b[37m\u001b[0m \u001b[1m0s\u001b[0m 428ms/step - accuracy: 0.2671 - loss: 1.3857"
+          ]
+        }
+      ]
+    }
+  ]
+}
