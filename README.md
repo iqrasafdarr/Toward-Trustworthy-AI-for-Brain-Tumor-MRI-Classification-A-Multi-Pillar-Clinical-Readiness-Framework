@@ -83,3 +83,90 @@ The model correctly localizes tumor regions across all 4 classes:
 ---
 
 ## 📁 Repository Structure
+brain-tumor-cross-dataset-classification/
+│
+├── brain_tumor_classification.ipynb # Main training pipeline (all 3 models)
+├── gradcam_crossdataset_eval.ipynb # Grad-CAM + cross-dataset evaluation
+├── exploratory_analysis.ipynb # Dataset exploration and visualization
+├── sample_images.png # Figure 1 — MRI sample grid
+├── gradcam_results.png # Figure 2 — Grad-CAM heatmaps
+├── requirements.txt # Python dependencies
+└── README.md
+
+---
+
+## 🚀 How to Run
+
+**1. Clone the repository:**
+```bash
+git clone https://github.com/ekrasafdar/brain-tumor-cross-dataset-classification.git
+cd brain-tumor-cross-dataset-classification
+```
+
+**2. Install dependencies:**
+```bash
+pip install -r requirements.txt
+```
+
+**3. Download datasets:**
+- [Kaggle Brain Tumor MRI Dataset](https://www.kaggle.com/datasets/masoudnickparvar/brain-tumor-mri-dataset)
+- [Figshare Brain Tumor Dataset](https://figshare.com/articles/dataset/brain_tumor_dataset/1512427)
+
+**4. Open in Google Colab:**
+- Upload `brain_tumor_classification.ipynb` to Google Colab
+- Enable GPU: Runtime → Change runtime type → T4 GPU
+- Mount Google Drive and update the dataset path
+- Run all cells
+
+**5. For Grad-CAM + Cross-Dataset Evaluation:**
+- Open `gradcam_crossdataset_eval.ipynb`
+- Load your trained MobileNetV2 model from Drive
+- Run all cells
+
+---
+
+## 📄 Paper
+
+**Title:** Cross-Dataset Generalization and Explainability Analysis of Transfer Learning Models for Brain Tumor MRI Classification
+
+**Author:** Iqra Safdar — COMSATS University Islamabad, Sahiwal Campus
+
+**Format:** IEEE Conference Paper
+
+**Status:** 🔄 Under supervisor review — arXiv submission pending
+
+---
+
+## 🛠️ Tech Stack
+
+| Tool | Purpose |
+|------|---------|
+| Python 3.10 | Core language |
+| TensorFlow / Keras | Model training |
+| scikit-learn | Evaluation metrics |
+| NumPy / Pandas | Data handling |
+| Matplotlib / Pillow | Visualization |
+| Grad-CAM | Explainability |
+| Google Colab (T4 GPU) | Training environment |
+| Overleaf | IEEE paper formatting |
+| GitHub | Version control |
+
+---
+
+## 👩‍💻 Author
+
+**Iqra Safdar**
+5th Semester, BS Computer Science
+COMSATS University Islamabad (CUI), Sahiwal Campus
+📧 sp24-bcs-205@student.cuisahiwal.edu.pk
+🔗 [GitHub](https://github.com/ekrasafdar)
+
+---
+
+## 📜 License
+
+MIT License — free to use with attribution.
+
+---
+
+## ⭐ If this research helped you, consider starring the repo!
