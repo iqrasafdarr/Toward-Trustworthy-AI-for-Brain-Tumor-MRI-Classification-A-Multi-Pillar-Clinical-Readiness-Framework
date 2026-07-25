@@ -83,15 +83,18 @@ The model correctly localizes tumor regions across all 4 classes:
 ---
 
 ## 📁 Repository Structure
+
+```text
 brain-tumor-cross-dataset-classification/
 │
-├── brain_tumor_classification.ipynb # Main training pipeline (all 3 models)
-├── gradcam_crossdataset_eval.ipynb # Grad-CAM + cross-dataset evaluation
-├── exploratory_analysis.ipynb # Dataset exploration and visualization
-├── sample_images.png # Figure 1 — MRI sample grid
-├── gradcam_results.png # Figure 2 — Grad-CAM heatmaps
-├── requirements.txt # Python dependencies
+├── brain_tumor_classification.ipynb      # Main training pipeline (all 3 models)
+├── gradcam_crossdataset_eval.ipynb       # Grad-CAM + cross-dataset evaluation
+├── exploratory_analysis.ipynb            # Dataset exploration and visualization
+├── sample_images.png                     # Figure 1 — MRI sample grid
+├── gradcam_results.png                   # Figure 2 — Grad-CAM heatmaps
+├── requirements.txt                      # Python dependencies
 └── README.md
+```
 
 ---
 
