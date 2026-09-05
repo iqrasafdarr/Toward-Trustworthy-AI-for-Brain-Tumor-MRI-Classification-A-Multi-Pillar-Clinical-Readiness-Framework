@@ -1,0 +1,18 @@
+{
+  "external_accuracy_raw": 85.67,
+  "external_accuracy_leakage_adjusted": 85.62,
+  "primary_accuracy": 94.19,
+  "gen_ratio": 0.9090,
+  "leakage_check": {
+    "method": "perceptual_hashing",
+    "hash_type": "average_hash",
+    "hash_size": 16,
+    "threshold": 5,
+    "total_test_images": 1600,
+    "total_figshare_images": 3064,
+    "duplicates_found": 11,
+    "affected_test_images_pct": 0.69,
+    "accuracy_impact": "negligible (-0.05pp after exclusion)"
+  },
+  "notes": "Perceptual hashing identified 11/1600 (0.69%) primary test images with a potential near-duplicate in the Figshare dataset. Excluding these images changed external accuracy by only 0.05 percentage points (85.67% to 85.62%), confirming the leakage does not meaningfully affect the reported cross-dataset generalization estimate."
+}
