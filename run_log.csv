@@ -1,0 +1,16 @@
+architecture,seed,predictions_path
+mobilenetv2,42,results/predictions_mobilenetv2_seed42.npz
+mobilenetv2,789,results/predictions_mobilenetv2_seed789.npz
+mobilenetv2,999,results/predictions_mobilenetv2_seed999.npz
+mobilenetv2,2023,results/predictions_mobilenetv2_seed2023.npz
+mobilenetv2,7,results/predictions_mobilenetv2_seed7.npz
+resnet50,42,results/predictions_resnet50_seed42.npz
+resnet50,789,results/predictions_resnet50_seed789.npz
+resnet50,999,results/predictions_resnet50_seed999.npz
+resnet50,2023,results/predictions_resnet50_seed2023.npz
+resnet50,7,results/predictions_resnet50_seed7.npz
+efficientnetb0,42,results/predictions_efficientnetb0_seed42.npz
+efficientnetb0,789,results/predictions_efficientnetb0_seed789.npz
+efficientnetb0,999,results/predictions_efficientnetb0_seed999.npz
+efficientnetb0,2023,results/predictions_efficientnetb0_seed2023.npz
+efficientnetb0,7,results/predictions_efficientnetb0_seed7.npz

@@ -1,0 +1,13 @@
+architecture,weight_scheme,cri
+mobilenetv2,baseline (0.40/0.25/0.20/0.15),
+mobilenetv2,equal (0.25/0.25/0.25/0.25),
+mobilenetv2,safety-heavy (0.25/0.25/0.35/0.15),
+mobilenetv2,accuracy-heavy (0.55/0.20/0.15/0.10),
+resnet50,baseline (0.40/0.25/0.20/0.15),
+resnet50,equal (0.25/0.25/0.25/0.25),
+resnet50,safety-heavy (0.25/0.25/0.35/0.15),
+resnet50,accuracy-heavy (0.55/0.20/0.15/0.10),
+efficientnetb0,baseline (0.40/0.25/0.20/0.15),
+efficientnetb0,equal (0.25/0.25/0.25/0.25),
+efficientnetb0,safety-heavy (0.25/0.25/0.35/0.15),
+efficientnetb0,accuracy-heavy (0.55/0.20/0.15/0.10),

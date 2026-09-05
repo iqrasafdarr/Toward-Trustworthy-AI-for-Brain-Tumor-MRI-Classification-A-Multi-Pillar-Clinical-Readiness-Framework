@@ -1,0 +1,4 @@
+architecture,acc_term,cal_term,safety_term,gen_term,cri,gen_source
+mobilenetv2,0.36475,0.2408145866803825,0.13548890210473788,,,MISSING — awaiting Track B
+resnet50,0.36060000000000003,0.23987156560644507,0.1412093555678528,,,MISSING — awaiting Track B
+efficientnetb0,0.36064999999999997,0.24481004453077912,0.16466399376201943,,,MISSING — awaiting Track B

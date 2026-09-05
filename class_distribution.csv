@@ -1,0 +1,5 @@
+,train_count,test_count,train_fraction,class_balanced_alpha,flat_alpha_used
+glioma,1400,400,0.25,1.0,0.25
+meningioma,1400,400,0.25,1.0,0.25
+notumor,1400,400,0.25,1.0,0.25
+pituitary,1400,400,0.25,1.0,0.25
