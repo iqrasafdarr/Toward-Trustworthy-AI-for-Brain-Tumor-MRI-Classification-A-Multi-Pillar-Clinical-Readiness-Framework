@@ -18,6 +18,26 @@ MODEL_FILES_SEED42 = {
 }
 
 
+def softmax(logits, T=1.0):
+    z = logits / T
+    z = z - z.max(axis=1, keepdims=True)
+    e = np.exp(z)
+    return e / e.sum(axis=1, keepdims=True)
+
+
+def fit_temperature(logits_cal, labels_cal):
+    """Grid-search the temperature T that minimizes NLL on the calibration
+    set -- Guo et al.'s single-parameter post-hoc calibration fix, applied
+    here so APS has room to work instead of saturating near 1.0."""
+    best_T, best_nll = 1.0, np.inf
+    for T in np.arange(0.5, 8.01, 0.05):
+        probs = softmax(logits_cal, T)
+        nll = -np.mean(np.log(probs[np.arange(len(labels_cal)), labels_cal] + 1e-12))
+        if nll < best_nll:
+            best_nll, best_T = nll, T
+    return best_T
+
+
 def load_npz_flexibly(path):
     """
     Handles whatever key names your npz files actually use. Prints the keys
@@ -28,6 +48,7 @@ def load_npz_flexibly(path):
 
     prob_keys = ["probs", "y_prob", "y_probs", "predictions", "softmax", "y_pred_probs"]
     label_keys = ["y_true", "labels", "y_test", "targets", "ground_truth"]
+    logit_keys = ["logits", "logit"]
 
     probs = None
     for k in prob_keys:
@@ -38,6 +59,11 @@ def load_npz_flexibly(path):
     for k in label_keys:
         if k in d.files:
             labels = d[k]
+            break
+    logits = None
+    for k in logit_keys:
+        if k in d.files:
+            logits = d[k]
             break
 
     if probs is None or labels is None:
@@ -50,16 +76,17 @@ def load_npz_flexibly(path):
     if labels.ndim == 2:
         labels = np.argmax(labels, axis=1)
 
-    return probs, labels
+    return probs, labels, logits
 
 
 def main():
     print("=== Loading seed-42 predictions ===")
-    all_probs, all_labels = {}, {}
+    all_probs, all_labels, all_logits = {}, {}, {}
     for name, path in MODEL_FILES_SEED42.items():
-        probs, labels = load_npz_flexibly(path)
+        probs, labels, logits = load_npz_flexibly(path)
         all_probs[name] = probs
         all_labels[name] = labels
+        all_logits[name] = logits
         print(f"  {name}: probs shape {probs.shape}, labels shape {labels.shape}")
 
     # ------------------------------------------------------------------
@@ -90,23 +117,34 @@ def main():
     # validation-set npz with probs, swap it in here instead. For a fast
     # first look, this carve-out gets you a number today.
     # ------------------------------------------------------------------
-    print("\n=== Pillar 2: Conformal triage (quick calibration carve-out) ===")
+    print("\n=== Pillar 2: Temperature scaling, then conformal triage ===")
     rng = np.random.default_rng(42)
     for name in all_probs:
-        probs = all_probs[name]
         labels = all_labels[name]
+        logits = all_logits[name]
         n = len(labels)
         idx = np.arange(n)
         rng.shuffle(idx)
         n_cal = int(0.10 * n)
         cal_idx, test_idx = idx[:n_cal], idx[n_cal:]
 
-        q_hat = calibrate_aps(probs[cal_idx], labels[cal_idx], alpha=0.10)
-        pred_sets = predict_sets(probs[test_idx], q_hat)
-        metrics_out = empirical_coverage_and_size(pred_sets, labels[test_idx])
-        print(f"  {name}: q_hat={q_hat:.4f}, coverage={metrics_out['coverage']:.3f}, "
-              f"mean_set_size={metrics_out['mean_set_size']:.2f}, "
-              f"referral_rate={metrics_out['referral_rate']:.3f}")
+        if logits is None:
+            print(f"  {name}: no 'logits' key found -- skipping temperature scaling, "
+                  f"using raw probs (expect saturated q_hat again).")
+            probs_used = all_probs[name]
+        else:
+            T = fit_temperature(logits[cal_idx], labels[cal_idx])
+            probs_used = softmax(logits, T)
+            print(f"  {name}: fitted temperature T={T:.2f}")
+
+        for alpha in (0.10, 0.15, 0.20):
+            q_hat = calibrate_aps(probs_used[cal_idx], labels[cal_idx], alpha=alpha)
+            pred_sets = predict_sets(probs_used[test_idx], q_hat)
+            metrics_out = empirical_coverage_and_size(pred_sets, labels[test_idx])
+            print(f"    alpha={alpha} (target coverage={1-alpha:.0%}): "
+                  f"q_hat={q_hat:.4f}, coverage={metrics_out['coverage']:.3f}, "
+                  f"mean_set_size={metrics_out['mean_set_size']:.2f}, "
+                  f"referral_rate={metrics_out['referral_rate']:.3f}")
 
     print("\nDone. Pillar 1 still needs the raw images + a retraining pass -- "
           "do that once you've got GPU time, using run_all_pillars.py.")
